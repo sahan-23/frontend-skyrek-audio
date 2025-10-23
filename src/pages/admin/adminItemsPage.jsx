@@ -4,125 +4,117 @@ import { CiCirclePlus } from "react-icons/ci";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 
+
+
 export default function AdminItemsPage() {
-  const [items, setItems] = useState([]);
-  const [itemsLoaded, setItemsLoaded] = useState(false);
-  const navigate = useNavigate();
+	const [items, setItems] = useState([]);
+	const [itemsLoaded, setItemsLoaded] = useState(false);
+    const navigate = useNavigate()
 
-  useEffect(() => {
-    if (!itemsLoaded) {
-      const token = localStorage.getItem("token");
-      axios
-        .get("http://localhost:3000/api/products", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          console.log(res.data);
-          setItems(res.data);
-          setItemsLoaded(true);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [itemsLoaded]);
+	useEffect(() => {
+		if (!itemsLoaded) {
+			const token = localStorage.getItem("token");
+			axios
+				.get(`${import.meta.env.VITE_BACKEND_URL}/api/products`, {
+					headers: { Authorization: `Bearer ${token}` },
+				})
+				.then((res) => {
+					console.log(res.data);
+					setItems(res.data);
+					setItemsLoaded(true);
+				})
+				.catch((err) => {
+					console.error(err);
+				});
+		}
+	}, [itemsLoaded]);
 
-  const handleDelete = (key) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      setItems(items.filter((item) => item.key !== key));
-      const token = localStorage.getItem("token");
-      axios
-        .delete(`http://localhost:3000/api/products/${key}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          console.log(res.data);
-          setItemsLoaded(false);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  };
+	const handleDelete = (key) => {
+		if (window.confirm("Are you sure you want to delete this item?")) {
+			setItems(items.filter((item) => item.key !== key));
+			const token = localStorage.getItem("token");
+			axios
+				.delete(`${import.meta.env.VITE_BACKEND_URL}/api/products/${key}`, {
+					headers: { Authorization: `Bearer ${token}` },
+				})
+				.then((res) => {
+					console.log(res.data);
+					setItemsLoaded(false);
+				})
+				.catch((err) => {
+					console.error(err);
+				});
+		}
+	};
 
-  return (
-    <div className="w-full h-full p-8 bg-gray-50 dark:bg-gray-900 relative">
-      {/* Loading Spinner */}
-      {!itemsLoaded && (
-        <div className="flex justify-center items-center h-full">
-          <div className="border-4 border-b-blue-500 rounded-full animate-spin w-8 h-8"></div>
-        </div>
-      )}
+	return (
+		<div className="w-full h-full p-4 relative flex items-center flex-col">
+			{!itemsLoaded && (
+				<div className="border-4 my-4 border-b-green-500 rounded-full animate-spin bg-0 w-[100px] h-[100px] "></div>
+			)}
+			{itemsLoaded && (
+				<div className="overflow-x-auto ">
+					<table className="w-full max-w-full border border-gray-300 rounded-lg shadow-md bg-white">
+						<thead className="bg-gray-100">
+							<tr className="text-left text-gray-700">
+								<th className="p-3 border">Key</th>
+								<th className="p-3 border">Name</th>
+								<th className="p-3 border">Price</th>
+								<th className="p-3 border">Category</th>
+								<th className="p-3 border">Dimensions</th>
+								<th className="p-3 border">Availability</th>
+								<th className="p-3 border text-center">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{items.map((product, index) => (
+								<tr
+									key={product.key}
+									className={`border ${
+										index % 2 === 0 ? "bg-gray-50" : "bg-white"
+									} hover:bg-gray-200 transition-all`}
+								>
+									<td className="p-3 border">{product.key}</td>
+									<td className="p-3 border">{product.name}</td>
+									<td className="p-3 border">${product.price.toFixed(2)}</td>
+									<td className="p-3 border">{product.category}</td>
+									<td className="p-3 border">{product.dimensions}</td>
+									<td className="p-3 border">
+										<span
+											className={`px-2 py-1 rounded text-sm font-medium ${
+												product.availability
+													? "bg-green-100 text-green-700"
+													: "bg-red-100 text-red-700"
+											}`}
+										>
+											{product.availability ? "Available" : "Not Available"}
+										</span>
+									</td>
+									<td className="p-3 border flex justify-center gap-3">
+										<button 
+                                            onClick={()=>{
+                                                navigate(`/admin/items/edit`, {state:product} )
+                                            }} className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+											<FaEdit className="inline mr-1" /> Edit
+										</button>
 
-      {/* Items Table */}
-      {itemsLoaded && (
-        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-          <table className="w-full min-w-[800px]">
-            <thead className="bg-gray-100 dark:bg-gray-700">
-              <tr className="text-left text-gray-700 dark:text-gray-200">
-                <th className="p-4 border-b dark:border-gray-600">Key</th>
-                <th className="p-4 border-b dark:border-gray-600">Name</th>
-                <th className="p-4 border-b dark:border-gray-600">Price</th>
-                <th className="p-4 border-b dark:border-gray-600">Category</th>
-                <th className="p-4 border-b dark:border-gray-600">Dimensions</th>
-                <th className="p-4 border-b dark:border-gray-600">Availability</th>
-                <th className="p-4 border-b dark:border-gray-600 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((product, index) => (
-                <tr
-                  key={product.key}
-                  className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-all ${
-                    index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-700"
-                  }`}
-                >
-                  <td className="p-4 border-b dark:border-gray-600 dark:text-gray-200">{product.key}</td>
-                  <td className="p-4 border-b dark:border-gray-600 dark:text-gray-200">{product.name}</td>
-                  <td className="p-4 border-b dark:border-gray-600 dark:text-gray-200">${product.price.toFixed(2)}</td>
-                  <td className="p-4 border-b dark:border-gray-600 dark:text-gray-200">{product.category}</td>
-                  <td className="p-4 border-b dark:border-gray-600 dark:text-gray-200">{product.dimensions}</td>
-                  <td className="p-4 border-b dark:border-gray-600">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        product.availability
-                          ? "bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100"
-                          : "bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100"
-                      }`}
-                    >
-                      {product.availability ? "Available" : "Not Available"}
-                    </span>
-                  </td>
-                  <td className="p-4 border-b dark:border-gray-600 flex justify-center gap-3">
-                    <button
-                      onClick={() => {
-                        navigate(`/admin/items/edit`, { state: product });
-                      }}
-                      className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                    >
-                      <FaEdit className="mr-2" /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.key)}
-                      className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-                    >
-                      <FaTrashAlt className="mr-2" /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+										<button
+											onClick={() => handleDelete(product.key)}
+											className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+										>
+											<FaTrashAlt className="inline mr-1" /> Delete
+										</button>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)}
 
-      {/* Add Item Button */}
-      <Link
-        to="/admin/items/add"
-        className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition"
-      >
-        <CiCirclePlus className="text-3xl" />
-      </Link>
-    </div>
-  );
+			<Link to="/admin/items/add" className="fixed bottom-6 right-6">
+				<CiCirclePlus className="text-[70px] text-blue-600 hover:text-red-900 transition duration-200 cursor-pointer" />
+			</Link>
+		</div>
+	);
 }

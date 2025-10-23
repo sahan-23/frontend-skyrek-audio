@@ -3,17 +3,41 @@ import "./login.css";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const googleLogin = useGoogleLogin(
+    {
+      onSuccess : (res)=>{
+        console.log(res)
+        axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/google`,{
+          accessToken : res.access_token
+        }).then((res)=>{
+          console.log(res)
+          toast.success("Login Success")
+          const user = res.data.user
+          localStorage.setItem("token",res.data.token)
+          if(user.role === "admin"){
+            navigate("/admin/")
+          }else{
+            navigate("/")
+          }
+        }).catch((err)=>{
+          console.log(err)
+        })
+      }
+    }
+  )
 
   function handleOnSubmit(e){
     e.preventDefault()
     console.log(email , password)
+    const backendUrl = import.meta.env.VITE_BACKEND_URL
 
-    axios.post("http://localhost:3000/api/users/login",
+    axios.post(`${backendUrl}/api/users/login`,
       {
         email : email,
         password : password
@@ -24,7 +48,11 @@ export default function LoginPage() {
       toast.success("Login Success")
       const user = res.data.user
       localStorage.setItem("token",res.data.token)
-      console.log(user)
+      
+      if(user.emailVerified == false){
+        navigate("/verify-email")
+        return
+      }
       
       if(user.role === "admin"){
         navigate("/admin/")
@@ -43,39 +71,40 @@ export default function LoginPage() {
   return (
     <div className="bg-picture w-full h-screen  flex justify-center items-center">
       <form onSubmit={handleOnSubmit}>
-        <div className="w-[400px] h-[450px] backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl flex flex-col justify-center items-center p-8 relative">
-          {/* Logo */}
+        <div className="w-[400px] h-[400px] backdrop-blur-xl rounded-2xl flex justify-center items-center flex-col relative">
           <img
             src="/logo.png"
             alt="logo"
-            className="w-[100px] h-[100px] object-cover mb-8"
+            className="w-[100px] h-[100px] object-cover "
           />
 
-          {/* Email Input */}
           <input
             type="email"
             placeholder="Email"
+            className="mt-6 w-[300px] h-[30px] bg-transparent border-b-2 border-white text-white text-xl outline-none"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 mb-6 bg-transparent border-b-2 border-white text-white placeholder-white/80 focus:outline-none focus:border-yellow-400 transition-all"
+            onChange={(e) => {
+              setEmail(e.target.value);
+            }}
           />
 
-          {/* Password Input */}
           <input
             type="password"
             placeholder="Password"
+            className="w-[300px] h-[30px]
+        mt-6 bg-transparent border-b-2 border-white text-white text-xl outline-none"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 mb-8 bg-transparent border-b-2 border-white text-white placeholder-white/80 focus:outline-none focus:border-yellow-400 transition-all"
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
           />
 
-          {/* Login Button */}
-          <button
-            type="submit"
-            className="w-full p-3 bg-[#efac38] text-white text-xl font-semibold rounded-lg hover:bg-[#d89b32] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-all"
-          >
+          <button className="my-8 w-[300px] h-[50px] bg-[#efac38] text-2xl text-white rounded-lg">
             Login
           </button>
+          <div className="my-8 w-[300px] h-[50px] bg-[#efac38] text-2xl text-white rounded-lg" onClick={googleLogin}>
+            Login with Google
+          </div>
         </div>
       </form>
     </div>

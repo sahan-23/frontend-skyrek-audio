@@ -5,55 +5,66 @@ import { Link, Route, Routes } from "react-router-dom";
 import AdminItemsPage from "./adminItemsPage";
 import AddItemPage from "./addItemPage";
 import UpdateItemPage from "./updateItemPage";
+import AdminUsersPage from "./adminUsersPage";
+import AdminOrdersPage from "./adminBookingPage";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-
-export default function AdminPage() {
-  return (
-    <div className="w-full h-screen flex bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar */}
-      <div className="w-[200px] h-full bg-white dark:bg-gray-800 shadow-lg flex flex-col p-4 space-y-2">
-        {/* Dashboard Button */}
-        <button className="w-full h-[50px] flex items-center justify-start space-x-2 p-3 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
-          <BsGraphDown className="text-xl" />
-          <span className="text-lg font-semibold">Dashboard</span>
+export default function AdminPage(){
+  const [userValidated, setUserValidated] = useState(false);
+  useEffect(()=>{
+    const token = localStorage.getItem("token");
+    if(!token){
+      window.location.href = "/login";
+    }
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/`,{
+      headers:{
+        Authorization: `Bearer ${token}`
+      }
+    }).then((res)=>{
+      console.log(res.data);
+      const user = res.data;
+      if(user.role == "admin"){
+        setUserValidated(true);        
+      }else{
+        window.location.href = "/";
+      }
+      
+    }).catch((err)=>{
+      console.error(err);
+      setUserValidated(false);
+    })
+  },[])
+  return(
+    <div className="w-full h-screen flex">
+      <div className="w-[200px] h-full bg-green-200">
+        <button className="w-full h-[40px] text-[25px] font-bold  flex justify-center items-center">
+          <BsGraphDown/>
+          Dashboard
         </button>
-
-        {/* Bookings Link */}
-        <Link
-          to="/admin/bookings"
-          className="w-full h-[50px] flex items-center justify-start space-x-2 p-3 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-        >
-          <FaRegBookmark className="text-xl" />
-          <span className="text-lg font-semibold">Bookings</span>
+        <Link to="/admin/orders" className="w-full h-[40px] text-[25px] font-bold flex justify-center items-center">
+          <FaRegBookmark/>
+          Orders
+        </Link>
+        <Link to="/admin/items" className="w-full h-[40px] text-[25px] font-bold flex justify-center items-center">
+          <MdOutlineSpeaker/>
+          Items
+        </Link>
+        <Link to="/admin/users" className="w-full h-[40px] text-[25px] font-bold flex justify-center items-center">
+          <FaRegUser/>
+          Users
         </Link>
 
-        {/* Items Link */}
-        <Link
-          to="/admin/items"
-          className="w-full h-[50px] flex items-center justify-start space-x-2 p-3 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-        >
-          <MdOutlineSpeaker className="text-xl" />
-          <span className="text-lg font-semibold">Items</span>
-        </Link>
-
-        {/* Users Button */}
-        <button className="w-full h-[50px] flex items-center justify-start space-x-2 p-3 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
-          <FaRegUser className="text-xl" />
-          <span className="text-lg font-semibold">Users</span>
-        </button>
       </div>
-
-      {/* Main Content Area */}
-      <div className="w-[calc(100vw-200px)] h-full overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
-
-        {/* Routes */}
-        <Routes>
-          <Route path="/bookings" element={<h1 className="text-gray-900 dark:text-gray-100">Booking</h1>} />
-          <Route path="/items" element={<AdminItemsPage />} />
-          <Route path="/items/add" element={<AddItemPage />} />
-          <Route path="/items/edit" element={<UpdateItemPage />} />
-        </Routes>
+      <div className="w-[calc(100vw-200px)] ">
+        {userValidated&&<Routes path="/*">
+          <Route path="/orders" element={<AdminOrdersPage/>}/>
+          <Route path="/users" element={<AdminUsersPage/>}/>
+          <Route path="/items" element={<AdminItemsPage/>}/> 
+          <Route path="/items/add" element={<AddItemPage/>}/>
+          <Route path="/items/edit" element={<UpdateItemPage/>}/>
+        </Routes>}
       </div>
     </div>
-  );
+  )
 }
